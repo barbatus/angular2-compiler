@@ -1,3 +1,4 @@
+'use strict';
 
 export const basePath = process.cwd();
 

@@ -16,6 +16,10 @@ import {
 
 import { CodeGeneratorWrapper } from './ng-codegen';
 
+import { isAsset, AssetCompiler } from './asset-compiler';
+
+import rollup from './rollup';
+
 const tcOptions = {
   baseUrl: basePath,
   experimentalDecorators: true,
@@ -34,50 +38,15 @@ const ngcOptions = {
   traceResolution: false,
 };
 
-const STATIC_ASSET = /(\.html|\.html\.ts|\.less|\.less\.ts)$/;
-
-const isHtml = filePath => /\.html$/.test(filePath);
-
-function clean(src) {
-  return JSON.stringify(src)
-    .replace(/^\"/, '')
-    .replace(/\"$/, '');
-}
-
-class HtmlCompiler {
-  constructor(addCompileResult) {
-    this.addCompileResult = addCompileResult;
-  }
-
-  processFilesForTarget(files) {
-    let htmlFiles = files.filter(file => {
-      const path = file.getPathInPackage();
-      return isHtml(path);
-    });
-    htmlFiles.forEach(htmlFile => {
-      const html = htmlFile.getContentsAsString();
-      this.addCompileResult(htmlFile, { html });
-    });
-  }
-};
-
 Angular2Compiler = class Angular2Compiler {
   constructor(extraTsOptions) {
     this.tsc = new TypeScriptCompiler(extraTsOptions);
     this.assetMap = new Map();
-    this.cssc = new StyleCompiler((inputFile, result) => {
-      const path = inputFile.getPathInPackage();
-      this.assetMap.set(path, result.css);
-    });
-    this.htmlc = new HtmlCompiler((inputFile, result) => {
-      const path = inputFile.getPathInPackage();
-      this.assetMap.set(path, result.html);
-    });
+    this.asc = new AssetCompiler();
   }
 
   processFilesForTarget(inputFiles) {
-    this.cssc.processFilesForTarget(inputFiles);
-    this.htmlc.processFilesForTarget(inputFiles);
+    this.asc.processFilesForTarget(inputFiles);
 
     // Get app ts-files.
     const tsFiles = this.tsc.getFilesToProcess(inputFiles);
@@ -106,28 +75,32 @@ Angular2Compiler = class Angular2Compiler {
     buildOptions.useCache = false;
 
     const allPaths = tsFilePaths.concat(ngcFilePaths);
-    let tsBuild = new TSBuild(allPaths, getContent, buildOptions);
+    const tsBuild = new TSBuild(allPaths, getContent, buildOptions);
     const codeMap = new Map();
     for (const filePath of allPaths) {
       const result = tsBuild.emit(filePath, filePath);
-      codeMap.set(filePath, result.code);
-      console.log(filePath);
-      console.log(result.diagnostics);
+      codeMap.set(removeTsExtension(filePath), result.code);
+    }
+
+    let bundle = rollup(codeMap);
+    if (bundle) {
+      const inputFile = tsFiles[0];
+      const toBeAdded = {
+        sourcePath: inputFile.getPathInPackage(),
+        path: 'bundle.js',
+        data: bundle
+      };
+      inputFile.addJavaScript(toBeAdded);
     }
   }
 
-  getAssetCode(filePath) {
+  getAssetModule(filePath) {
     filePath = removeTsExtension(getMeteorPath(filePath));
-    const code = this.assetMap.get(filePath);
-    if (! code) {
+    const module = this.asc.getAssetES6Module(filePath);
+    if (! module) {
        throw new Error(`Asset file not found ${filePath}`);
     }
-    const exportName = isHtml(filePath) ? 'template' : 'style';
-    return this.buildExport(exportName, code);
-  }
-
-  buildExport(exportName, code) {
-    return `export const ${exportName} = "${clean(code)}";`;
+    return module;
   }
 
   getContentGetter(inputFiles) {
@@ -139,9 +112,11 @@ Angular2Compiler = class Angular2Compiler {
 
     return filePath => {
       filePath = getMeteorPath(filePath);
-      if (STATIC_ASSET.test(filePath)) {
-        return this.getAssetCode(filePath);
+
+      if (isAsset(filePath)) {
+        return this.getAssetModule(filePath);
       }
+
       let index = filesMap.get(filePath);
       if (index === undefined) {
         let filePathNoRootSlash = filePath.replace(/^\//, '');

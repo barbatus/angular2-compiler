@@ -1,3 +1,5 @@
+'use strict';
+
 import 'reflect-metadata';
 
 const path = Npm.require('path');
@@ -97,24 +99,20 @@ export class CodeGeneratorWrapper {
     const { fileMetas, ngModules } = collector.getModuleSymbols(program);
 
     const compiler = codegen.compiler;
-    const analyzedNgModules = compiler.analyzeModules(ngModules);
+    const analyzedModules = compiler.analyzeModules(ngModules);
 
     const ngcFilesMap = new Map();
     const promises = fileMetas.map((fileMeta) => {
       const directives = [];
       fileMeta.components.forEach(dirType => {
-        const ngModule = analyzedNgModules.ngModuleByComponent.get(dirType);
+        const ngModule = analyzedModules.ngModuleByComponent.get(dirType);
         if (ngModule) {
           directives.push(dirType);
         }
       });
 
-      if (! directives.length) {
-        return Promise.resolve(null);
-      }
-
-      const filePath = getMeteorPath(fileMeta.fileUrl);
-      return compiler.compile(filePath, analyzedNgModules, directives, ngModules)
+      const filePath = fileMeta.fileUrl;
+      return compiler.compile(filePath, analyzedModules, directives, ngModules)
         .then((generatedModules) => {
           generatedModules.forEach((generatedModule) => {
             const filePath = getMeteorPath(generatedModule.moduleUrl);
@@ -133,9 +131,7 @@ export class CodeGeneratorWrapper {
     reflectorHost.findDeclaration = (module, symbolName, ...args) => {
       let symb = findDeclaration.apply(reflectorHost,
         [module, symbolName || 'default', ...args]);
-      if (symb.filePath.indexOf(basePath) === -1) {
-        symb.filePath = getNoRooted(symb.filePath);
-      }
+      //symb.filePath = getMeteorPath(symb.filePath);
       return symb;
     }
   }

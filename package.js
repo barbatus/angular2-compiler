@@ -9,9 +9,12 @@ Package.describe({
 Npm.depends({
   'meteor-typescript': '0.7.1',
   'async': '1.4.0',
-  'typescript': '2.0.0',
+  'typescript': '2.0.2',
   '@angular/compiler-cli': '2.1.0',
   '@angular/tsc-wrapped': '0.3.0',
+  'rollup': '0.36.3',
+  'rollup-plugin-node-resolve': '2.0.0',
+  'rollup-plugin-hypothetical': '1.2.1',
 });
 
 Package.onUse(function(api) {
@@ -29,6 +32,8 @@ Package.onUse(function(api) {
     'compiler.js',
     'ng-codegen.js',
     'file-utils.js',
+    'rollup.js',
+    'asset-compiler.js',
   ], 'server');
 
   api.export([
