@@ -2,5 +2,6 @@
 Package contains one combined Angular 2 compiler that provides:
  - Typescript compilation 
  - Assets compilation (HTML, styles)
- - NGC compilation and bundling with the tree-shaking
+ - Angular 2's AoT compilation
+ - Rollup's bundling with tree-shaking
  

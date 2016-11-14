@@ -11,7 +11,11 @@ const {
   CodeGenerator,
 } = Npm.require('@angular/compiler-cli');
 
-import { getMeteorPath, basePath, getNoRooted } from './file-utils';
+import {
+  removeTsExtension,
+  getMeteorPath,
+  getFullPath,
+} from './file-utils';
 
 function resolveModuleNames(ngcOptions, ngcHost) {
   return (filePaths, containingFile) => {
@@ -85,6 +89,24 @@ function getNgcReflectorContext(ngcHost) {
   return _.extend({}, ngcHost, reflectorContext);
 }
 
+function genBootrapModule(moduleFilePath) {
+  const path = removeTsExtension(getMeteorPath(moduleFilePath));
+  return `
+    import {platformBrowser} from '@angular/platform-browser';
+    import {AppModuleNgFactory} from './${path}.ngfactory';
+    platformBrowser().bootstrapModuleFactory(AppModuleNgFactory);
+  `;
+}
+
+export function removeDynamicBootstrap(code) {
+  if (code.indexOf('platformBrowserDynamic') !== -1) {
+    return code
+      .replace(/(import\s*{[^{]*platformBrowserDynamic[^}]*})/, '//\$1')
+      .replace(/(platformBrowserDynamic\(\))/, '//\$1');
+  }
+  return code;
+}
+
 export class CodeGeneratorWrapper {
   static generate(filePaths, ngcOptions, getMeteorFileContent) {
     const host = getNgcHost(ngcOptions, getMeteorFileContent);
@@ -111,7 +133,7 @@ export class CodeGeneratorWrapper {
         }
       });
 
-      const filePath = fileMeta.fileUrl;
+      const filePath = getFullPath(fileMeta.fileUrl);
       return compiler.compile(filePath, analyzedModules, directives, ngModules)
         .then((generatedModules) => {
           generatedModules.forEach((generatedModule) => {
@@ -123,7 +145,15 @@ export class CodeGeneratorWrapper {
 
     Promise.all(promises).await();
 
-    return ngcFilesMap;
+    // Assume that the first module is the main one.
+    // TODO: this needs more solid check.
+    let bootstrapModule = null;
+    if (ngModules[0]) {
+      const path = ngModules[0].filePath;
+      bootstrapModule = genBootrapModule(path);
+    }
+
+    return { ngcFilesMap, bootstrapModule };
   }
 
   static patchReflectorHost(reflectorHost) {
@@ -131,7 +161,7 @@ export class CodeGeneratorWrapper {
     reflectorHost.findDeclaration = (module, symbolName, ...args) => {
       let symb = findDeclaration.apply(reflectorHost,
         [module, symbolName || 'default', ...args]);
-      //symb.filePath = getMeteorPath(symb.filePath);
+      symb.filePath = getFullPath(symb.filePath);
       return symb;
     }
   }

@@ -5,15 +5,9 @@ const baseRollup = Npm.require('rollup').rollup;
 const Hypothetical = Npm.require('rollup-plugin-hypothetical');
 const NodeResolve = Npm.require('rollup-plugin-node-resolve');
 
-import { getMeteorPath } from './file-utils';
+import {getMeteorPath, isRooted, getNoRooted} from './file-utils';
 
-import { isAsset, getEmptyAssetEs6Module } from './asset-compiler';
-
-const BOOTSTRAP = `
-  import {platformBrowser} from '@angular/platform-browser';
-  import {AppModuleNgFactory} from './client/app.module.ngfactory';
-  platformBrowser().bootstrapModuleFactory(AppModuleNgFactory);
-`;
+import {isAsset, getEmptyAssetEs6Module} from './asset-compiler';
 
 const nodeResolve = NodeResolve({
   jsnext: true,
@@ -27,12 +21,18 @@ const AppResolve = appNgModules => {
     resolveId(importee, importer) {
       if (! importer) return null;
 
-      const parts = importee.split(/[\/\\]/);
-      let modId = parts.shift();
-      if (modId[0] === '.') {
+      let modId = importee;
+
+      // Relative path.
+      if (importee[0] === '.') {
         modId = path.resolve(importer, '..', importee);
+        modId = getMeteorPath(modId);
       }
-      modId = getMeteorPath(modId);
+
+      // Rooted path.
+      if (isRooted(importee)) {
+        modId = getMeteorPath(importee);
+      }
 
       if (appNgModules.has(modId)) {
         return Promise.resolve(modId);
@@ -43,7 +43,10 @@ const AppResolve = appNgModules => {
         return Promise.resolve(index);
       }
 
-      // Skip bundling.
+      const parts = importee.split(/[\/\\]/);
+      modId = parts.shift();
+
+      // Bundle libs we want, skip others.
       if (! libsToBundle.test(modId)) {
         return null;
       }
@@ -52,7 +55,6 @@ const AppResolve = appNgModules => {
     },
 
     load(modId) {
-      modId = getMeteorPath(modId);
       if (appNgModules.has(modId)) {
         return Promise.resolve(appNgModules.get(modId));
       }
@@ -66,13 +68,13 @@ const AppResolve = appNgModules => {
   }
 };
 
-export default function rollup(appNgModules) {
+export default function rollup(appNgModules, bootstrapModule) {
   return baseRollup({
     entry: 'main.js',
     plugins: [
       Hypothetical({
         files: {
-          'main.js': BOOTSTRAP,
+          'main.js': bootstrapModule,
         },
         allowRealFiles: true,
       }),

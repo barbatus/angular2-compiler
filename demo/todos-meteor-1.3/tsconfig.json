@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "target": "es5",
+    "noImplicitAny": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "traceResolution": false
+  },
+  "files": [
+    "client/app.module.ts",
+    "client/main.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "useCache": false,
+  "compileOnSave": false,
+  "buildOnSave": false,
+  "angularCompilerOptions": {
+    "genDir": ".",
+    "skipMetadataEmit": true
+  }
+}

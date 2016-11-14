@@ -14,9 +14,9 @@ import {
   basePath,
 } from './file-utils';
 
-import { CodeGeneratorWrapper } from './ng-codegen';
+import {CodeGeneratorWrapper, removeDynamicBootstrap} from './ng-codegen';
 
-import { isAsset, AssetCompiler } from './asset-compiler';
+import {isAsset, AssetCompiler} from './asset-compiler';
 
 import rollup from './rollup';
 
@@ -38,16 +38,32 @@ const ngcOptions = {
   traceResolution: false,
 };
 
+const isWeb = arch => /^web/.test(arch);
+
 Angular2Compiler = class Angular2Compiler {
   constructor(extraTsOptions) {
     this.tsc = new TypeScriptCompiler(extraTsOptions);
-    this.assetMap = new Map();
     this.asc = new AssetCompiler();
   }
 
   processFilesForTarget(inputFiles) {
     this.asc.processFilesForTarget(inputFiles);
 
+    if (process.env.AOT) {
+      const arch = inputFiles[0].getArch();
+      // AoT compile and bundle for the web only currently.
+      if (isWeb(arch)) {
+        return this.ngcAndBundle(inputFiles);
+      }
+    }
+
+    this.tsc.processFilesForTarget(inputFiles, filePath => {
+      filePath = removeTsExtension(getMeteorPath(filePath));
+      return this.asc.getAssetES6Module(filePath);
+    });
+  }
+
+  ngcAndBundle(inputFiles) {
     // Get app ts-files.
     const tsFiles = this.tsc.getFilesToProcess(inputFiles);
     const tsFilePaths = tsFiles.map(file => file.getPathInPackage());
@@ -56,7 +72,7 @@ Angular2Compiler = class Angular2Compiler {
     const { options } = ts.convertCompilerOptionsFromJson(tcOptions, '');
     const genOptions = _.extend({}, options, ngcOptions);
 
-    const ngcFilesMap = CodeGeneratorWrapper.generate(
+    const { ngcFilesMap, bootstrapModule } = CodeGeneratorWrapper.generate(
       tsFilePaths, genOptions, defaultGet);
     const ngcFilePaths = [];
     ngcFilesMap.forEach((value, key) => {
@@ -79,10 +95,15 @@ Angular2Compiler = class Angular2Compiler {
     const codeMap = new Map();
     for (const filePath of allPaths) {
       const result = tsBuild.emit(filePath, filePath);
-      codeMap.set(removeTsExtension(filePath), result.code);
+      // TODO: find out why it's null sometimes
+      let code = result.code;
+      if (code) {
+        code = removeDynamicBootstrap(result.code);
+        codeMap.set(removeTsExtension(filePath), code);
+      }
     }
 
-    let bundle = rollup(codeMap);
+    const bundle = rollup(codeMap, bootstrapModule);
     if (bundle) {
       const inputFile = tsFiles[0];
       const toBeAdded = {

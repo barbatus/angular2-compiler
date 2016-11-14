@@ -24,16 +24,13 @@ export function getEmptyAssetEs6Module(filePath) {
   return `export const ${exportName} = "";`;
 }
 
-class HtmlCompiler {
+class TemplateCompiler {
   constructor(addCompileResult) {
     this.addCompileResult = addCompileResult;
+    this.shc = new StaticHtmlCompiler(null, )
   }
 
-  processFilesForTarget(files) {
-    let htmlFiles = files.filter(file => {
-      const path = file.getPathInPackage();
-      return isHtml(path);
-    });
+  processFilesForTarget(htmlFiles) {
     htmlFiles.forEach(htmlFile => {
       const html = htmlFile.getContentsAsString();
       this.addCompileResult(htmlFile, { html });
@@ -41,22 +38,38 @@ class HtmlCompiler {
   }
 };
 
+const babelOptions = Babel.getDefaultOptions();
+babelOptions.sourceMap = false;
+babelOptions.ast = false;
+
 export class AssetCompiler {
   constructor() {
     this.assetMap = new Map();
     this.cssc = new StyleCompiler((inputFile, result) => {
       const path = inputFile.getPathInPackage();
       this.assetMap.set(path, result.css);
+
+      this.addJSModule(inputFile);
     });
-    this.htmlc = new HtmlCompiler((inputFile, result) => {
-      const path = inputFile.getPathInPackage();
-      this.assetMap.set(path, result.html);
-    });
+    this.htmlc = new StaticHtmlCompiler(
+      null /* process by default main html */,
+      new TemplateCompiler((inputFile, result) => {
+        const path = inputFile.getPathInPackage();
+        this.assetMap.set(path, result.html);
+
+        this.addJSModule(inputFile);
+      })
+    );
   }
 
   processFilesForTarget(inputFiles) {
     this.cssc.processFilesForTarget(inputFiles);
-    this.htmlc.processFilesForTarget(inputFiles);
+
+    const htmlFiles = inputFiles.filter(file => {
+      const path = file.getPathInPackage();
+      return isHtml(path);
+    });
+    this.htmlc.processFilesForTarget(htmlFiles);
   }
 
   getAssetES6Module(filePath) {
@@ -65,5 +78,12 @@ export class AssetCompiler {
       return exportAsset(filePath, code);
     }
     return null;
+  }
+
+  addJSModule(inputFile) {
+    const path = inputFile.getPathInPackage();
+    const es6Mod = this.getAssetES6Module(path);
+    const data = Babel.compile(es6Mod, babelOptions).code;
+    inputFile.addJavaScript({data, path, lazy: true});
   }
 }
