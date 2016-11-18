@@ -11,10 +11,14 @@ Npm.depends({
   'async': '1.4.0',
   'typescript': '2.0.2',
   '@angular/compiler-cli': '2.1.0',
+  '@angular/compiler': '2.1.0',
+  '@angular/core': '2.1.0',
+  'rxjs': '5.0.0-beta.12',
   '@angular/tsc-wrapped': '0.3.0',
   'rollup': '0.36.3',
   'rollup-plugin-node-resolve': '2.0.0',
   'rollup-plugin-hypothetical': '1.2.1',
+  'rollup-plugin-commonjs': '5.0.4',
 });
 
 Package.onUse(function(api) {
@@ -26,6 +30,8 @@ Package.onUse(function(api) {
     'underscore@1.0.4',
     'barbatus:typescript-compiler@0.8.4',
     'barbatus:css-compiler@0.3.4',
+    'urigo:static-html-compiler@0.1.8',
+    'babel-compiler@6.8.0',
   ], 'server');
 
   api.addFiles([

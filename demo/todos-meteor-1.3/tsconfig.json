@@ -10,8 +10,7 @@
     "traceResolution": false
   },
   "files": [
-    "client/app.module.ts",
-    "client/main.ts"
+    "client/bootstrap.ts"
   ],
   "exclude": [
     "node_modules"

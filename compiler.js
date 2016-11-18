@@ -88,7 +88,6 @@ Angular2Compiler = class Angular2Compiler {
     }
     const buildOptions = this.tsc.getBuildOptions(inputFiles);
     buildOptions.compilerOptions.module = 'es2015';
-    buildOptions.useCache = false;
 
     const allPaths = tsFilePaths.concat(ngcFilePaths);
     const tsBuild = new TSBuild(allPaths, getContent, buildOptions);

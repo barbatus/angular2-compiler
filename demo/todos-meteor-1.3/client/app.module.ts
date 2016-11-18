@@ -2,6 +2,9 @@
 
 'use strict';
 
+import 'reflect-metadata';
+import 'zone.js/dist/zone.js';
+
 import {NgModule, enableProdMode} from '@angular/core';
 
 import {FormsModule} from '@angular/forms';

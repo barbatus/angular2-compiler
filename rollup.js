@@ -3,6 +3,7 @@
 const path = Npm.require('path');
 const baseRollup = Npm.require('rollup').rollup;
 const Hypothetical = Npm.require('rollup-plugin-hypothetical');
+const CommonJS = Npm.require('rollup-plugin-commonjs');
 const NodeResolve = Npm.require('rollup-plugin-node-resolve');
 
 import {getMeteorPath, isRooted, getNoRooted} from './file-utils';
@@ -14,7 +15,9 @@ const nodeResolve = NodeResolve({
   module: true,
 });
 
-const libsToBundle = /^@angular/;
+const METEOR_PKG = /^(meteor)$/;
+
+const EXCLUDE_MODULES = ['node_modules/zone.js/**'];
 
 const AppResolve = appNgModules => {
   return {
@@ -46,8 +49,8 @@ const AppResolve = appNgModules => {
       const parts = importee.split(/[\/\\]/);
       modId = parts.shift();
 
-      // Bundle libs we want, skip others.
-      if (! libsToBundle.test(modId)) {
+      // Skip bundling meteor packages.
+      if (METEOR_PKG.test(modId)) {
         return null;
       }
 
@@ -71,6 +74,7 @@ const AppResolve = appNgModules => {
 export default function rollup(appNgModules, bootstrapModule) {
   return baseRollup({
     entry: 'main.js',
+    onwarn: (warn) => {},
     plugins: [
       Hypothetical({
         files: {
@@ -79,6 +83,10 @@ export default function rollup(appNgModules, bootstrapModule) {
         allowRealFiles: true,
       }),
       AppResolve(appNgModules),
+      CommonJS({
+        sourceMap: false,
+        exclude: EXCLUDE_MODULES,
+      }),
     ]
   })
   .then(bundle => {
