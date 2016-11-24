@@ -10,16 +10,16 @@ import {getMeteorPath, isRooted, getNoRooted} from './file-utils';
 
 import {isAsset, getEmptyAssetEs6Module} from './asset-compiler';
 
-const nodeResolve = NodeResolve({
-  jsnext: true,
-  module: true,
-});
-
 const METEOR_PKG = /^(meteor)$/;
 
 const EXCLUDE_MODULES = ['node_modules/zone.js/**'];
 
-const AppResolve = appNgModules => {
+const AppResolve = (appNgModules, forWeb) => {
+  const nodeResolve = NodeResolve({
+    jsnext: true,
+    module: true,
+    browser: forWeb,
+  });
   return {
     resolveId(importee, importer) {
       if (! importer) return null;
@@ -71,7 +71,7 @@ const AppResolve = appNgModules => {
   }
 };
 
-export default function rollup(appNgModules, bootstrapModule) {
+export default function rollup(appNgModules, bootstrapModule, forWeb) {
   return baseRollup({
     entry: 'main.js',
     onwarn: (warn) => {},
@@ -82,7 +82,7 @@ export default function rollup(appNgModules, bootstrapModule) {
         },
         allowRealFiles: true,
       }),
-      AppResolve(appNgModules),
+      AppResolve(appNgModules, forWeb),
       CommonJS({
         sourceMap: false,
         exclude: EXCLUDE_MODULES,

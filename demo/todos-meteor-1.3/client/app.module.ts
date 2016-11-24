@@ -2,8 +2,7 @@
 
 'use strict';
 
-import 'reflect-metadata';
-import 'zone.js/dist/zone.js';
+import 'angular2-meteor-polyfills';
 
 import {NgModule, enableProdMode} from '@angular/core';
 

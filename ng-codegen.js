@@ -5,6 +5,8 @@ import 'reflect-metadata';
 const path = Npm.require('path');
 const ts = Npm.require('typescript');
 
+const { NgModule } = Npm.require('@angular/core');
+
 const {
   ReflectorHost,
   StaticReflector,
@@ -15,7 +17,13 @@ import {
   removeTsExtension,
   getMeteorPath,
   getFullPath,
+  isRooted,
+  basePath,
 } from './file-utils';
+
+const ngCompilerOptions = {
+  transitiveModules: true
+};
 
 function resolveModuleNames(ngcOptions, ngcHost) {
   return (filePaths, containingFile) => {
@@ -89,8 +97,8 @@ function getNgcReflectorContext(ngcHost) {
   return _.extend({}, ngcHost, reflectorContext);
 }
 
-function genBootrapModule(moduleFilePath) {
-  const path = removeTsExtension(getMeteorPath(moduleFilePath));
+function genBootstrapCode(moduleFilePath) {
+  const path = removeTsExtension(moduleFilePath);
   return `
     import {platformBrowser} from '@angular/platform-browser';
     import {AppModuleNgFactory} from './${path}.ngfactory';
@@ -117,43 +125,36 @@ export class CodeGeneratorWrapper {
 
     this.patchReflectorHost(codegen.reflectorHost);
 
-    const collector = codegen.moduleCollector;
-    const { fileMetas, ngModules } = collector.getModuleSymbols(program);
-
-    const compiler = codegen.compiler;
-    const analyzedModules = compiler.analyzeModules(ngModules);
-
-    const ngcFilesMap = new Map();
-    const promises = fileMetas.map((fileMeta) => {
-      const directives = [];
-      fileMeta.components.forEach(dirType => {
-        const ngModule = analyzedModules.ngModuleByComponent.get(dirType);
-        if (ngModule) {
-          directives.push(dirType);
-        }
-      });
-
-      const filePath = getFullPath(fileMeta.fileUrl);
-      return compiler.compile(filePath, analyzedModules, directives, ngModules)
-        .then((generatedModules) => {
-          generatedModules.forEach((generatedModule) => {
-            const filePath = getMeteorPath(generatedModule.moduleUrl);
-            ngcFilesMap.set(filePath, generatedModule.source);
-          });
-        });
+    const ngModulesMap = extractNgModules(
+      program, codegen.staticReflector, codegen.reflectorHost);
+    const staticSymbols = [];
+    const ngModules = [];
+    ngModulesMap.forEach((ngModule, symb) => {
+      staticSymbols.push(symb);
+      ngModules.push(ngModule);
     });
 
-    Promise.all(promises).await();
+    const ngcFilesMap = new Map();
+    const compiler = codegen.compiler;
+    compiler.compileModules(staticSymbols, ngCompilerOptions)
+      .then((generatedModules) => {
+        generatedModules.forEach((generatedModule) => {
+          const filePath = getMeteorPath(generatedModule.moduleUrl);
+          ngcFilesMap.set(filePath, generatedModule.source);
+        });
+      })
+      .await();
 
-    // Assume that the first module is the main one.
-    // TODO: this needs more solid check.
-    let bootstrapModule = null;
-    if (ngModules[0]) {
-      const path = ngModules[0].filePath;
-      bootstrapModule = genBootrapModule(path);
-    }
+    const bootModule = findBootstrapModule(ngModules);
+    let bootstrapCode = null;
+    ngModulesMap.forEach((ngModule, symb) => {
+      if (bootModule === ngModule) {
+        const path = getMeteorPath(symb.filePath);
+        bootstrapCode = genBootstrapCode(path);
+      }
+    });
 
-    return { ngcFilesMap, bootstrapModule };
+    return { ngcFilesMap, bootstrapCode };
   }
 
   static patchReflectorHost(reflectorHost) {
@@ -165,4 +166,45 @@ export class CodeGeneratorWrapper {
       return symb;
     }
   }
+}
+
+const GENERATED_FILES = /\.d\.ts$|\.ngfactory\.ts$/;
+
+function extractNgModules(program, staticReflector, reflectorHost) {
+  const modules = new Map();
+  program.getSourceFiles()
+    .map(sf => sf.fileName)
+    .filter(filePath => !GENERATED_FILES.test(filePath))
+    .forEach(filePath => {
+      const moduleMetadata = staticReflector.getModuleMetadata(filePath);
+      if (! moduleMetadata) {
+        console.log(`WARNING: no metadata found for ${filePath}`);
+        return;
+      }
+
+      const metadata = moduleMetadata['metadata'];
+      if (! metadata) {
+        return;
+      }
+
+      for (const symbName of Object.keys(metadata)) {
+        if (metadata[symbName] && metadata[symbName].__symbolic == 'error') {
+          // Ignore symbols that are only included to record error information.
+          continue;
+        }
+        const symbol = reflectorHost
+          .findDeclaration(filePath, symbName, filePath);
+        const ngModule = staticReflector
+          .annotations(symbol)
+          .find(ann => ann instanceof NgModule);
+        if (ngModule) {
+          modules.set(symbol, ngModule);
+        }
+      }
+    });
+  return modules;
+}
+
+function findBootstrapModule(ngModules) {
+  return ngModules.find(module => module.bootstrap.length);
 }
