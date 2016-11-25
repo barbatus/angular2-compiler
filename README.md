@@ -35,8 +35,9 @@ On the final step all generated factory and component ES6 js-modules
 are bundled together using Rollup bundler in the Tree Shaking mode.
 Three Shaking is a special algorithm that traverses graph of the js-modules
 (mostly of NPMs but not only) to find modules that are imported but
-not unused (or to be exact, exports of which are not used).
+not used (or to be exact, exports of which are not used).
 Then, they are excluded from the bundle.
+For more info on that read [here](https://angular.io/docs/ts/latest/cookbook/aot-compiler.html#!#tree-shaking) and [here](https://github.com/rollup/rollup).
 
 As you can see above, this mode introduces a couple of optimizations that take additional time to process,
 which makes it more fit for the prodaction rather then for the development where you
