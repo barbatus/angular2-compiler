@@ -39,9 +39,9 @@ not used (or to be exact, exports of which are not used).
 Then, they are excluded from the bundle.
 For more info on that read [here](https://angular.io/docs/ts/latest/cookbook/aot-compiler.html#!#tree-shaking) and [here](https://github.com/rollup/rollup).
 
-As you can see above, this mode introduces a couple of optimizations that take additional time to process,
-which makes it more fit for the prodaction rather then for the development where you
-add new changes often and demand quick response from the compiler.
+As you can see above, this mode introduces a couple of optimizations that take additional time to process
+making it a good fit for the production (more reasons you can find below) rather
+then for the development where you add new changes often and demand quick response from the compiler.
 
 ### Bootstrapping
 After the compilation, main Angular 2 module factory should be bootstrapped as follows:
