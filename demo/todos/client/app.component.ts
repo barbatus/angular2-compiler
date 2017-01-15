@@ -18,9 +18,10 @@ export class Todos {
   hideCompleted: boolean = false;
   newTask = null;
 
-  todoCount = Tasks.find({ checked: false})
+  todoCount = Tasks.find({checked: false})
     .debounce(() => Observable.interval(50))
-    .map(tasks => tasks.length);
+    .map(tasks => tasks.length)
+    .zone();
 
   addTask(text: string) {
     Meteor.call('tasks.addTask', text);

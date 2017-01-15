@@ -14,7 +14,7 @@ import {METEOR_PROVIDERS} from 'angular2-meteor';
 
 import {Todos} from './app.component';
 import {TaskList} from './components';
-import {TaskView} from '/imports/components';
+import {TaskView} from '../imports/components';
 
 enableProdMode();
 
@@ -24,4 +24,4 @@ enableProdMode();
   providers: [],
   bootstrap: [Todos]
 })
-export class AppModule { }
+export class AppModule {}

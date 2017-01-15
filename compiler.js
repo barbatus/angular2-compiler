@@ -34,7 +34,7 @@ const tcOptions = {
 const ngcOptions = {
   basePath,
   genDir: basePath,
-  generateCodeForLibraries: false,
+  generateCodeForLibraries: true,
   traceResolution: false,
 };
 
@@ -72,12 +72,10 @@ Angular2Compiler = class Angular2Compiler {
     const { options } = ts.convertCompilerOptionsFromJson(tcOptions, '');
     const genOptions = _.extend({}, options, ngcOptions);
 
+    const fullPaths = tsFilePaths.map(filePath => path.join(basePath, filePath));
     const { ngcFilesMap, bootstrapCode } = CodeGeneratorWrapper.generate(
-      tsFilePaths, genOptions, defaultGet);
-    const ngcFilePaths = [];
-    ngcFilesMap.forEach((value, key) => {
-      ngcFilePaths.push(key);
-    });
+      fullPaths, genOptions, defaultGet);
+    const ngcFilePaths = Array.from(ngcFilesMap.keys());
 
     console.log('ngcFilesMap');
     console.log(ngcFilesMap.size);
@@ -94,12 +92,8 @@ Angular2Compiler = class Angular2Compiler {
     const codeMap = new Map();
     for (const filePath of allPaths) {
       const result = tsBuild.emit(filePath, filePath);
-      // TODO: find out why it's null sometimes
-      let code = result.code;
-      if (code) {
-        code = removeDynamicBootstrap(result.code);
-        codeMap.set(removeTsExtension(filePath), code);
-      }
+      const code = removeDynamicBootstrap(result.code);
+      codeMap.set(removeTsExtension(filePath), code);
     }
 
     const bundle = rollup(codeMap, bootstrapCode, forWeb);
