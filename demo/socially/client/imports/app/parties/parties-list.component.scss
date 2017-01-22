@@ -1,0 +1,76 @@
+.parties-list-container {
+  align-items: center;
+  display: flex;
+  flex-flow: row wrap;
+  margin: 0 auto;
+  width: 100%;
+  display: table;
+
+  .parties-list {
+    display: table-cell;
+    width: 50%;
+    vertical-align: top;
+
+    .pagination {
+      display: inline;
+      text-align: center;
+    }
+
+    .filter-card {
+      margin: 20px;
+    }
+
+    .party-card {
+      margin: 20px;
+      position: relative;
+
+      img.party-main-image {
+        max-width: 100%;
+        max-height: 100%;
+      }
+
+      .party-name > a {
+        color: black;
+        text-decoration: none;
+      }
+
+      .remove-party {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+
+      .rsvp-container {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+
+        .rsvps-sum {
+          display: inline-block;
+          width: 50px;
+          text-align: center;
+
+          .rsvps-amount {
+            font-size: 24px;
+          }
+
+          .rsvps-title {
+            font-size: 13px;
+            color: #aaa;
+          }
+        }
+      }
+    }
+  }
+
+  .parties-map {
+    display: table-cell;
+    width: 50%;
+    vertical-align: top;
+
+    .google-map {
+      width: 100%;
+      min-height: 600px;
+    }
+  }
+}

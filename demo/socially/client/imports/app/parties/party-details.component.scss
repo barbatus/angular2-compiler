@@ -1,0 +1,25 @@
+.party-details-container {
+  display: table;
+
+  .row {
+    display: table-row;
+    width: 100%;
+
+    .party-details, .party-invites, .party-map {
+      display: table-cell;
+      width: 33.3%;
+      vertical-align: top;
+
+      md-card {
+        margin: 20px;
+      }
+    }
+
+    .party-map {
+      sebm-google-map {
+        height: 300px;
+        width: 100%;
+      }
+    }
+  }
+}
