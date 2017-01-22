@@ -10,7 +10,7 @@ import {getMeteorPath, isRooted, getNoRooted} from './file-utils';
 
 import {isAsset, getEmptyAssetEs6Module} from './asset-compiler';
 
-const METEOR_PKG = /^(meteor)$/;
+const METEOR_PKG = /^(meteor|ng2-pagination)$/;
 
 const EXCLUDE_MODULES = ['node_modules/zone.js/**'];
 
@@ -56,7 +56,6 @@ const AppResolve = (appNgModules, forWeb) => {
 
       return nodeResolve.resolveId(importee, importer);
     },
-
     load(modId) {
       if (appNgModules.has(modId)) {
         return Promise.resolve(appNgModules.get(modId));
@@ -71,14 +70,14 @@ const AppResolve = (appNgModules, forWeb) => {
   }
 };
 
-export default function rollup(appNgModules, bootstrapModule, forWeb) {
+export default function rollup(appNgModules, bootstrapModule, mainCodePath, forWeb) {
   return baseRollup({
-    entry: 'main.js',
+    entry: mainCodePath,
     onwarn: (warn) => {},
     plugins: [
       Hypothetical({
         files: {
-          'main.js': bootstrapModule,
+          [mainCodePath]: bootstrapModule,
         },
         allowRealFiles: true,
       }),

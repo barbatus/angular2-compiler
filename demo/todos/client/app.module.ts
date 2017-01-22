@@ -1,7 +1,3 @@
-/// <reference types="meteor-typings" />
-
-'use strict';
-
 import 'angular2-meteor-polyfills';
 
 import {NgModule, enableProdMode} from '@angular/core';

@@ -94,6 +94,12 @@ function createCompilerHostContext(ngcHost) {
     },
     assumeFileExists(filePath) {
       assumedExists[filePath] = true;
+    },
+    readResource(filePath) {
+      if (! ngcHost.fileExists(filePath)) {
+        throw new Error(`Compilation failed. Resource file not found: ${filePath}`);
+      }
+      return Promise.resolve(ngcHost.readFile(filePath));
     }
   }
   return _.extend({}, ngcHost, reflectorContext);
@@ -109,17 +115,26 @@ function genBootstrapCode(moduleFilePath) {
   const path = removeTsExtension(moduleFilePath);
   return `
     import {platformBrowser} from '@angular/platform-browser';
-    import {AppModuleNgFactory} from './${path}.ngfactory';
-    platformBrowser().bootstrapModuleFactory(AppModuleNgFactory);
+    import {AppModuleNgFactory} from '/${path}.ngfactory';
+    Meteor.startup(() => {
+      platformBrowser().bootstrapModuleFactory(AppModuleNgFactory);
+    });
   `;
 }
 
-export function removeDynamicBootstrap(code) {
-  if (code.indexOf('platformBrowserDynamic') !== -1) {
-    return code
-      .replace(/(import\s*{[^{]*platformBrowserDynamic[^}]*})/, '//\$1')
-      .replace(/(platformBrowserDynamic\(\))/, '//\$1');
-  }
+export function hasDynamicBootstrap(code) {
+  return code.indexOf('platformBrowserDynamic') !== -1;
+}
+
+export function removeDynamicBootstrap(code, mainModuleName) {
+  code = code
+    .replace(/(import\s*{[^{]*platformBrowserDynamic[^}]*})/, '//\$1')
+    .replace(/([^\n]*platformBrowserDynamic\(\))/, '//\$1')
+    .replace(/([^\n]*bootstrapModule\()/, '//\$1');
+
+  mainModuleName = mainModuleName.replace('.', '\.');
+  const regExp = new RegExp(`([^\\n]*import[\\s]+.*${mainModuleName})`);
+  code = code.replace(regExp, '//\$1');
   return code;
 }
 
@@ -201,13 +216,15 @@ export class CodeGeneratorWrapper {
     const ngModules = Array.from(ngModulesMap.values());
     const bootModule = findBootstrapModule(ngModules);
     let bootstrapCode = null;
+    let mainModulePath = null;
     ngModulesMap.forEach((ngModule, symb) => {
       if (bootModule === ngModule) {
         const path = getMeteorPath(symb.filePath);
         bootstrapCode = genBootstrapCode(path);
+        mainModulePath = path;
       }
     });
 
-    return { ngcFilesMap, bootstrapCode };
+    return { ngcFilesMap, bootstrapCode, mainModulePath };
   }
 }

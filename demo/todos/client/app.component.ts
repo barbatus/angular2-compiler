@@ -1,5 +1,3 @@
-'use strict';
-
 import {Component} from '@angular/core';
 
 import {Tasks} from '../tasks';

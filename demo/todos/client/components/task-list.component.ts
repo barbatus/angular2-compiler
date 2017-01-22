@@ -1,5 +1,3 @@
-'use strict';
-
 import {Component, Input, OnChanges} from '@angular/core';
 
 import {MeteorReactive} from 'angular2-meteor';

@@ -14,7 +14,11 @@ import {
   basePath,
 } from './file-utils';
 
-import {CodeGeneratorWrapper, removeDynamicBootstrap} from './ng-codegen';
+import {
+  CodeGeneratorWrapper, 
+  removeDynamicBootstrap,
+  hasDynamicBootstrap,
+} from './ng-codegen';
 
 import {isAsset, AssetCompiler} from './asset-compiler';
 
@@ -73,7 +77,7 @@ Angular2Compiler = class Angular2Compiler {
     const genOptions = _.extend({}, options, ngcOptions);
 
     const fullPaths = tsFilePaths.map(filePath => path.join(basePath, filePath));
-    const { ngcFilesMap, bootstrapCode } = CodeGeneratorWrapper.generate(
+    const { ngcFilesMap, bootstrapCode, mainModulePath } = CodeGeneratorWrapper.generate(
       fullPaths, genOptions, defaultGet);
     const ngcFilePaths = Array.from(ngcFilesMap.keys());
 
@@ -90,15 +94,34 @@ Angular2Compiler = class Angular2Compiler {
     const allPaths = tsFilePaths.concat(ngcFilePaths);
     const tsBuild = new TSBuild(allPaths, getContent, buildOptions);
     const codeMap = new Map();
-    for (const filePath of allPaths) {
+    const tsFilePath = allPaths.filter(
+      filePath => ! TypeScript.isDeclarationFile(filePath));
+    let mainCode = bootstrapCode;
+    let mainCodePath = 'main.js';
+    for (const filePath of tsFilePath) {
       const result = tsBuild.emit(filePath, filePath);
-      const code = removeDynamicBootstrap(result.code);
+      const code = result.code;
+      if (hasDynamicBootstrap(code)) {
+        const moduleName = path.basename(
+          removeTsExtension(mainModulePath));
+        mainCode = removeDynamicBootstrap(code, moduleName);
+        mainCode += '\n' + bootstrapCode;
+        mainCodePath = removeTsExtension(filePath) + '.js';
+        continue;
+      }
       codeMap.set(removeTsExtension(filePath), code);
     }
 
-    const bundle = rollup(codeMap, bootstrapCode, forWeb);
+    const bundle = rollup(codeMap, mainCode, mainCodePath, forWeb);
     if (bundle) {
-      const inputFile = tsFiles[0];
+      // Look for a ts-file in the client or server
+      // folder to add generated bundle.
+      const prefix = forWeb ? 'client' : 'server';
+      const inputFile = tsFiles.find(file => {
+          const filePath = file.getPathInPackage();
+          return filePath.startsWith(prefix) && 
+                 filePath.indexOf('imports') === -1;
+        });
       const toBeAdded = {
         sourcePath: inputFile.getPathInPackage(),
         path: 'bundle.js',

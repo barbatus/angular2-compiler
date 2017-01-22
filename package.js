@@ -15,17 +15,17 @@ Npm.depends({
   '@angular/core': '2.4.3',
   '@angular/common': '2.4.3',
   'rxjs': '5.0.3',
-  'rollup': '0.41.1',
+  'rollup': '0.41.4',
   'rollup-plugin-node-resolve': '2.0.0',
   'rollup-plugin-hypothetical': '1.2.1',
-  'rollup-plugin-commonjs': '5.0.5',
+  'rollup-plugin-commonjs': '7.0.0',
 });
 
 Package.onUse(function(api) {
   api.versionsFrom('1.4.1');
 
   api.use([
-    'ecmascript@0.4.2',
+    'ecmascript@0.6.1',
     'check@1.0.5',
     'underscore@1.0.4',
     'barbatus:typescript-compiler@0.9.2_1',
