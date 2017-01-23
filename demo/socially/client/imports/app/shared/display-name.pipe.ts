@@ -1,7 +1,7 @@
 import {Pipe, PipeTransform} from '@angular/core';
 import {Meteor} from 'meteor/meteor';
 
-import {User} from '../../../../both/models/user.model';
+import {User} from 'both/models/user.model';
 
 @Pipe({
   name: 'displayName'

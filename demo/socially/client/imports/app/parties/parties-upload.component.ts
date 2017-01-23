@@ -5,9 +5,9 @@ import {MeteorObservable} from 'meteor-rxjs';
 import {template} from './parties-upload.component.html';
 import {style} from './parties-upload.component.scss';
 
-import {upload} from '../../../../both/methods/images.methods';
-import {Thumb} from '../../../../both/models/image.model';
-import {Thumbs} from '../../../../both/collections/images.collection';
+import {upload} from 'both/methods/images.methods';
+import {Thumb} from 'both/models/image.model';
+import {Thumbs} from 'both/collections/images.collection';
 
 @Component({
   selector: 'parties-upload',

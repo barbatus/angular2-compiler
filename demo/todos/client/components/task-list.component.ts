@@ -4,9 +4,9 @@ import {MeteorReactive} from 'angular2-meteor';
 
 import {ObservableCursor} from 'meteor-rxjs';
 
-import {TodoTask} from '../../tasks';
+import {TodoTask} from 'tasks';
 
-import {Tasks} from '../../tasks';
+import {Tasks} from 'tasks';
 
 import {template} from './task-list.component.html';
 

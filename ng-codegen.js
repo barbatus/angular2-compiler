@@ -115,8 +115,8 @@ function genBootstrapCode(moduleFilePath) {
   const path = removeTsExtension(moduleFilePath);
   return `
     import {platformBrowser} from '@angular/platform-browser';
-    import {AppModuleNgFactory} from '/${path}.ngfactory';
-    Meteor.startup(() => {
+    import {AppModuleNgFactory} from '${path}.ngfactory';
+    Meteor.startup(function() {
       platformBrowser().bootstrapModuleFactory(AppModuleNgFactory);
     });
   `;

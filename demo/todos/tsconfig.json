@@ -8,6 +8,10 @@
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "traceResolution": false,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["*"]
+    },
     "types": [
       "meteor-typings"
     ]

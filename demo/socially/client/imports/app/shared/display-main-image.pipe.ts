@@ -1,8 +1,8 @@
 import {Pipe, PipeTransform} from '@angular/core';
 import {Meteor} from 'meteor/meteor';
 
-import {Images} from '../../../../both/collections/images.collection';
-import {Party} from '../../../../both/models/party.model';
+import {Images} from 'both/collections/images.collection';
+import {Party} from 'both/models/party.model';
 
 @Pipe({
   name: 'displayMainImage'

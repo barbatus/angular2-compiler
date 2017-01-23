@@ -1,7 +1,7 @@
 import {Meteor} from 'meteor/meteor';
 import {Counts} from 'meteor/tmeasday:publish-counts';
 
-import {Parties} from '../../../both/collections/parties.collection';
+import {Parties} from 'both/collections/parties.collection';
 
 interface Options {
   [key: string]: any;

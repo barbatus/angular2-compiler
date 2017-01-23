@@ -105,14 +105,20 @@ Angular2Compiler = class Angular2Compiler {
         const moduleName = path.basename(
           removeTsExtension(mainModulePath));
         mainCode = removeDynamicBootstrap(code, moduleName);
-        mainCode += '\n' + bootstrapCode;
+        mainCode += `\n` + bootstrapCode;
         mainCodePath = removeTsExtension(filePath) + '.js';
         continue;
       }
       codeMap.set(removeTsExtension(filePath), code);
     }
 
-    const bundle = rollup(codeMap, mainCode, mainCodePath, forWeb);
+    const tsconfig = this.tsc.tsconfig;
+    const exclude = !!tsconfig.angularCompilerOptions &&
+      tsconfig.angularCompilerOptions.exclude;
+    const namedExports = !!tsconfig.angularCompilerOptions &&
+      tsconfig.angularCompilerOptions.namedExports;
+    const bundle = rollup(codeMap, mainCode, mainCodePath,
+      exclude, namedExports, forWeb);
     if (bundle) {
       // Look for a ts-file in the client or server
       // folder to add generated bundle.

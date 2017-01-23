@@ -21,7 +21,7 @@ function exportAsset(filePath, content) {
 
 export function getEmptyAssetEs6Module(filePath) {
   const exportName = genExportName(filePath);
-  return `export const ${exportName} = "";`;
+  return `export var ${exportName} = "";`;
 }
 
 class TemplateCompiler {

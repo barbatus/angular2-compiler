@@ -5,7 +5,7 @@ import {InjectUser} from 'angular2-meteor-accounts-ui';
 import {template} from './parties-form.component.html';
 import {style} from './parties-form.component.scss';
 
-import {Parties} from '../../../../both/collections/parties.collection';
+import {Parties} from 'both/collections/parties.collection';
 
 @Component({
   selector: 'parties-form',

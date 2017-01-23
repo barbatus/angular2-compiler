@@ -5,8 +5,8 @@ import {MeteorObservable} from 'meteor-rxjs';
 import {Counts} from 'meteor/tmeasday:publish-counts';
 import {InjectUser} from 'angular2-meteor-accounts-ui';
 
-import {Party} from '../../../../both/models/party.model';
-import {Parties} from '../../../../both/collections/parties.collection';
+import {Party} from 'both/models/party.model';
+import {Parties} from 'both/collections/parties.collection';
 
 interface Pagination {
   limit: number;

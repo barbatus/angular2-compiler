@@ -7,10 +7,15 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["*"]
+    },
     "types": [
       "meteor-typings",
       "zone.js",
-      "@types/node"
+      "@types/node",
+      "@types/es6-shim"
     ]
   },
   "exclude": [
@@ -23,6 +28,9 @@
   "compileOnSave": false,
   "angularCompilerOptions": {
     "genDir": ".",
-    "skipMetadataEmit": true
+    "skipMetadataEmit": true,
+    "namedExports": {
+      "ng2-pagination": ["Ng2PaginationModule", "PaginationService"]
+    }
   }
 }

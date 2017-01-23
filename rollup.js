@@ -10,11 +10,10 @@ import {getMeteorPath, isRooted, getNoRooted} from './file-utils';
 
 import {isAsset, getEmptyAssetEs6Module} from './asset-compiler';
 
-const METEOR_PKG = /^(meteor|ng2-pagination)$/;
-
 const EXCLUDE_MODULES = ['node_modules/zone.js/**'];
 
-const AppResolve = (appNgModules, forWeb) => {
+const AppResolve = (appNgModules, exclude, forWeb) => {
+  const exlRegExp = new RegExp(`^(${exclude.join('|')})$`);
   const nodeResolve = NodeResolve({
     jsnext: true,
     module: true,
@@ -49,8 +48,8 @@ const AppResolve = (appNgModules, forWeb) => {
       const parts = importee.split(/[\/\\]/);
       modId = parts.shift();
 
-      // Skip bundling meteor packages.
-      if (METEOR_PKG.test(modId)) {
+      // Skip bundling packages to exclude.
+      if (exlRegExp.test(modId)) {
         return null;
       }
 
@@ -70,7 +69,8 @@ const AppResolve = (appNgModules, forWeb) => {
   }
 };
 
-export default function rollup(appNgModules, bootstrapModule, mainCodePath, forWeb) {
+export default function rollup(
+  appNgModules, bootstrapModule, mainCodePath, exclude, namedExports, forWeb) {
   return baseRollup({
     entry: mainCodePath,
     onwarn: (warn) => {},
@@ -81,11 +81,13 @@ export default function rollup(appNgModules, bootstrapModule, mainCodePath, forW
         },
         allowRealFiles: true,
       }),
-      AppResolve(appNgModules, forWeb),
+      AppResolve(appNgModules,
+        ['meteor'].concat(exclude || []), forWeb),
       CommonJS({
         sourceMap: false,
         exclude: EXCLUDE_MODULES,
-      }),
+        namedExports: namedExports || {},
+      })
     ]
   })
   .then(bundle => {

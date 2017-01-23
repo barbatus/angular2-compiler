@@ -6,7 +6,7 @@ import {style} from './task.component.less';
 
 import {template} from './task.component.html';
 
-import {TodoTask} from '../../tasks';
+import {TodoTask} from 'tasks';
 
 @Component({
   selector: 'task',

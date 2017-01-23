@@ -1,6 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 
-import {Parties} from '../../../both/collections/parties.collection';
+import {Parties} from 'both/collections/parties.collection';
 
 Meteor.publish('uninvited', function (partyId: string) {
   const party = Parties.findOne(partyId);
