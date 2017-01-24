@@ -1,5 +1,3 @@
-'use strict';
-
 const path = Npm.require('path');
 
 export const basePath = process.cwd();

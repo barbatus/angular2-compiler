@@ -1,5 +1,3 @@
-'use strict';
-
 const STATIC_ASSET = /(\.html|\.html\.ts|\.less|\.less\.ts|\.scss|\.scss\.ts)$/;
 
 function clean(src) {
