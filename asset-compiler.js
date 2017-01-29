@@ -14,12 +14,18 @@ const genExportName = filePath => isHtml(filePath) ? 'template' : 'style';
 
 function exportAsset(filePath, content) {
   const exportName = genExportName(filePath);
-  return `export const ${exportName} = "${clean(content)}";`;
+  return `
+    const ${exportName} = "${clean(content)}";
+    export default ${exportName};
+  `;
 }
 
 export function getEmptyAssetEs6Module(filePath) {
   const exportName = genExportName(filePath);
-  return `export var ${exportName} = "";`;
+  return `
+    const ${exportName} = "";
+    export default ${exportName};
+  `;
 }
 
 class TemplateCompiler {

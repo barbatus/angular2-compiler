@@ -44,7 +44,7 @@ const ngcOptions = {
 
 const isWeb = arch => /^web/.test(arch);
 
-Angular2Compiler = class Angular2Compiler {
+AngularCompiler = class AngularCompiler {
   constructor(extraTsOptions) {
     this.tsc = new TypeScriptCompiler(extraTsOptions);
     this.asc = new AssetCompiler();
@@ -80,9 +80,6 @@ Angular2Compiler = class Angular2Compiler {
     const { ngcFilesMap, bootstrapCode, mainModulePath } = CodeGeneratorWrapper.generate(
       fullPaths, genOptions, defaultGet);
     const ngcFilePaths = Array.from(ngcFilesMap.keys());
-
-    console.log('ngcFilesMap');
-    console.log(ngcFilesMap.size);
 
     const getContent = filePath => {
       return ngcFilesMap.get(filePath) ||

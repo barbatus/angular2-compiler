@@ -1,7 +1,7 @@
 Package.describe({
-  name: 'barbatus:angular2-compiler',
+  name: 'barbatus:angular-compiler',
   version: '0.1.0',
-  summary: 'Angular 2 compiler for Meteor',
+  summary: 'Angular compiler for Meteor',
   git: 'https://github.com/barbatus/ts-compilers',
   documentation: 'README.md'
 });
@@ -30,7 +30,7 @@ Package.onUse(function(api) {
     'underscore@1.0.4',
     'barbatus:typescript-compiler@0.9.2_1',
     'barbatus:css-compiler@0.4.1',
-    'urigo:static-html-compiler@0.1.8',
+    'barbatus:static-html-compiler@0.1.9-beta.1',
     'babel-compiler@6.8.0',
   ], 'server');
 
@@ -43,6 +43,24 @@ Package.onUse(function(api) {
   ], 'server');
 
   api.export([
-    'Angular2Compiler',
+    'AngularCompiler',
+  ], 'server');
+});
+
+Package.onTest(function(api) {
+  api.use([
+    'tinytest',
+    'ecmascript',
+    'underscore',
+    'practicalmeteor:sinon',
+    'practicalmeteor:chai',
+    'practicalmeteor:mocha',
+    'dispatch:mocha-phantomjs',
+  ]);
+  api.use('barbatus:angular-compiler');
+
+  api.addFiles([
+    'tests/server/unit/input-file.js',
+    'tests/server/unit/compiler-tests_spec.js',
   ], 'server');
 });
