@@ -24,6 +24,8 @@ import {isAsset, AssetCompiler} from './asset-compiler';
 
 import rollup from './rollup';
 
+import Logger from './logger';
+
 const tcOptions = {
   baseUrl: basePath,
   experimentalDecorators: true,
@@ -57,7 +59,7 @@ AngularCompiler = class AngularCompiler {
       const arch = inputFiles[0].getArch();
       // AoT compile and bundle for the web only currently.
       if (isWeb(arch)) {
-        return this.ngcAndBundle(inputFiles, true);
+        return this._ngcAndBundle(inputFiles, true);
       }
     }
 
@@ -67,19 +69,30 @@ AngularCompiler = class AngularCompiler {
     });
   }
 
-  ngcAndBundle(inputFiles, forWeb) {
+  _ngcAndBundle(inputFiles, forWeb) {
     // Get app ts-files.
     const tsFiles = this.tsc.getFilesToProcess(inputFiles);
     const tsFilePaths = tsFiles.map(file => file.getPathInPackage());
-    const defaultGet = this.getContentGetter(tsFiles);
+    const defaultGet = this._getContentGetter(tsFiles);
 
     const { options } = ts.convertCompilerOptionsFromJson(tcOptions, '');
     const genOptions = _.extend({}, options, ngcOptions);
 
     const fullPaths = tsFilePaths.map(filePath => path.join(basePath, filePath));
-    const { ngcFilesMap, bootstrapCode, mainModulePath } = CodeGeneratorWrapper.generate(
-      fullPaths, genOptions, defaultGet);
+    let ngcError = null;
+    const cgp = Logger.newProfiler('code generator');
+    const { ngcFilesMap, bootstrapCode, mainModulePath } =
+      CodeGeneratorWrapper.generate(fullPaths, genOptions, defaultGet)
+        .catch(error => ngcError = error)
+        .await();
+    cgp.end();
+    if (ngcError) {
+      Logger.logError(ngcError.message);
+      return null;
+    }
+
     const ngcFilePaths = Array.from(ngcFilesMap.keys());
+    Logger.log('generated files: %s', ngcFilePaths);
 
     const getContent = filePath => {
       return ngcFilesMap.get(filePath) ||
@@ -97,6 +110,7 @@ AngularCompiler = class AngularCompiler {
     let mainCodePath = 'main.js';
     for (const filePath of tsFilePath) {
       const result = tsBuild.emit(filePath, filePath);
+      this._processTsDiagnostics(result.diagnostics);
       const code = result.code;
       if (hasDynamicBootstrap(code)) {
         const moduleName = path.basename(
@@ -134,7 +148,7 @@ AngularCompiler = class AngularCompiler {
     }
   }
 
-  getAssetModule(filePath) {
+  _getAssetModule(filePath) {
     filePath = removeTsExtension(getMeteorPath(filePath));
     const module = this.asc.getAssetES6Module(filePath);
     if (! module) {
@@ -143,7 +157,7 @@ AngularCompiler = class AngularCompiler {
     return module;
   }
 
-  getContentGetter(inputFiles) {
+  _getContentGetter(inputFiles) {
     let filesMap = new Map();
     inputFiles.forEach((inputFile, index) => {
       const filePath = inputFile.getPathInPackage();
@@ -154,7 +168,7 @@ AngularCompiler = class AngularCompiler {
       filePath = getMeteorPath(filePath);
 
       if (isAsset(filePath)) {
-        return this.getAssetModule(filePath);
+        return this._getAssetModule(filePath);
       }
 
       let index = filesMap.get(filePath);
@@ -165,5 +179,12 @@ AngularCompiler = class AngularCompiler {
       return index !== undefined ?
         inputFiles[index].getContentsAsString() : null;
     };
+  }
+
+  _processTsDiagnostics(diagnostics) {
+    diagnostics.semanticErrors.forEach(({ fileName, line, column, message }) => {
+      const msg = `${fileName} (${line}, ${column}): ${message}`;
+      Logger.logWarning(msg);
+    });
   }
 }

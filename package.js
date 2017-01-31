@@ -19,6 +19,7 @@ Npm.depends({
   'rollup-plugin-node-resolve': '2.0.0',
   'rollup-plugin-hypothetical': '1.2.1',
   'rollup-plugin-commonjs': '7.0.0',
+  'colors': '1.1.2',
 });
 
 Package.onUse(function(api) {
@@ -40,6 +41,7 @@ Package.onUse(function(api) {
     'file-utils.js',
     'rollup.js',
     'asset-compiler.js',
+    'logger.js',
   ], 'server');
 
   api.export([
