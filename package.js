@@ -1,6 +1,6 @@
 Package.describe({
   name: 'barbatus:angular-compiler',
-  version: '0.1.0',
+  version: '0.1.0-beta.1',
   summary: 'Angular compiler for Meteor',
   git: 'https://github.com/barbatus/ts-compilers',
   documentation: 'README.md'

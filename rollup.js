@@ -1,5 +1,3 @@
-'use strict';
-
 const path = Npm.require('path');
 const baseRollup = Npm.require('rollup').rollup;
 const Hypothetical = Npm.require('rollup-plugin-hypothetical');
