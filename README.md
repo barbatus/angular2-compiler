@@ -72,7 +72,7 @@ For more info on the pluses and other details, please, read [here](https://angul
 TODO demo comes out as 1.4MB (not compressed) js-bundle in the default mode,
 at the same time it's of 1.1MB size in the AoT mode, which is 0.3MB less.
 It should be taken into account that for big apps difference can be even
-more substantial since more NPMs you use - there is more chance the number of unused
-exports increase making Tree Shaking to unleash its power.
+more substantial since more NPMs you use -- more chance that the number of unused
+exports will increase making Tree Shaking to unleash fully its power.
 
 You can notice as well that the app runs a bit faster, thanks to the pre-compiled assets.
