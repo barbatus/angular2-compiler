@@ -75,4 +75,4 @@ It should be taken into account that for big apps difference can be even
 more substantial since more NPMs you use -- more chance that the number of unused
 exports will increase making Tree Shaking to unleash fully its power.
 
-You can notice as well that the app runs a bit faster, thanks to the pre-compiled assets.
+You can notice as well that the app starts off a bit faster, thanks to the pre-compiled assets.
